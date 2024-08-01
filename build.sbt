@@ -61,3 +61,7 @@ dockerCommands := {
       Cmd("RUN", """["chmod", "-R", "u=rwX,g=rwX", "/opt/codecheck"]"""),
     ) ++ cmds._2    
 }
+
+libraryDependencies ++= Seq(
+   "org.postgresql" % "postgresql" % "42.7.3"
+)
