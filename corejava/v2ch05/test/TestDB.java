@@ -64,7 +64,6 @@ public class TestDB
       String url = props.getProperty("jdbc.url");
       String username = props.getProperty("jdbc.username");
       String password = props.getProperty("jdbc.password");
-
       return DriverManager.getConnection(url, username, password);
    }
 }

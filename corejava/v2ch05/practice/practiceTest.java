@@ -31,23 +31,30 @@ public class practiceTest
         try (Connection conn = getConnection();
                 Statement stat = conn.createStatement())
         {
+            //stat.executeUpdate("DROP TABLE PROBLEM");
             stat.executeUpdate("CREATE TABLE PROBLEM (REPO VARCHAR(10), KEY VARCHAR(10), CONTENTS BYTEA)");
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('1', 'ABCDEFG', '\b012345')");
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('2', 'HIJKLM', '\b012345')");
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('3', 'NOPQRS', '\b012345')");
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('4', 'TUVWX', '\b012345')");
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('5', 'YZ', '\b012345')");
+            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('1', 'test.exe', '\b012345')");
+            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('2', 'test.exe', '\b012345')");
+            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('3', 'test.exe', '\b012345')");
+            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('4', 'test.exe', '\b012345')");
+            stat.executeUpdate("INSERT INTO PROBLEM VALUES ('5', 'test.exe', '\b012345')");
 
             try (ResultSet result = stat.executeQuery("SELECT * FROM PROBLEM"))
             {
-                if (result.next())
-                System.out.println(result.getString(1));
+                while(result.next())
+                {
+                    System.out.println(result.getString(1));
+                    System.out.println(result.getString(2));
+                    //get blob & get byte and to print out?
+                    System.out.println(result.getBytes(3));
+
+                }
             }
-            stat.executeUpdate("DROP TABLE PROBELM");
+            stat.executeUpdate("DROP TABLE PROBLEM");
         }
     }
 
-    //section for the
+    //section for the, should be different
     public static Connection getConnection() throws SQLException, IOException
     {
         var props = new Properties();
