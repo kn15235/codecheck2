@@ -12,6 +12,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
   guice,
+  javaJdbc,
   "com.amazonaws" % "aws-java-sdk" % "1.11.496",
   "net.oauth.core" % "oauth-provider" % "20100527",
   "oauth.signpost" % "signpost-core" % "1.2.1.2",

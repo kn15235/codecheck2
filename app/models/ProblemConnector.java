@@ -20,12 +20,14 @@ import com.horstmann.codecheck.Util;
 import com.typesafe.config.Config;
 
 import play.Logger;
+import java.util.Properties;
+import java.io.Reader;
 
-import java.sql.Connection;
+import java.sql.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.inject.Inject;
-import play.db.Database;
+import play.db.*;
 
 // TODO Use DI configuration to avoid this delegation
 
@@ -33,11 +35,11 @@ import play.db.Database;
 public class ProblemConnector {
     private ProblemConnection delegate;
 
-    @Inject public ProblemConnector(Config config) {
+    @Inject public ProblemConnector(Config config, Database db) {
         if (config.hasPath("com.horstmann.codecheck.s3.region"))
             delegate = new ProblemS3Connection(config);
-        else if(config.hasPath("com.horstmann.codecheck.sql.region")) 
-            delegate = new ProblemSQLConnection(config);
+        else if(config.hasPath("db.default.url"))
+            delegate = new ProblemSQLConnection(db);
         else 
             delegate = new ProblemLocalConnection(config);
     }
@@ -199,74 +201,65 @@ class ProblemLocalConnection implements ProblemConnection {
 
 class ProblemSQLConnection implements ProblemConnection {
     private static Logger.ALogger logger = Logger.of("com.horstmann.codecheck");
-
-    public ProblemSQLConnection (Config config){
-        Connection conn = null; 
-        var props = new Properties();
-        try (Reader in = Files.newBufferedReader(
-                Path.of("database.properties"), StandardCharsets.UTF_8))
-        {
-            props.load(in);
-            String drivers = props.getProperty("jdbc.drivers");
-            if (drivers != null)
-            {
-                System.setProperty("jdbc.drivers", drivers);     
-            } 
-            String url = props.getProperty("jdbc.url");
-            String username = props.getProperty("jdbc.username");
-            String password = props.getProperty("jdbc.password");
-            conn = DriverManager.getConnection(url, username, password);
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            conn.close(); 
-        }
+    private Database db;
+    public ProblemSQLConnection(Database db) {
+        this.db = db; // TODO
     }
 
-    public void write(String repo, String key, byte[] contents) throws IOException {
-        try (Connection conn = getConnection();
-                Statement stat = conn.createStatement())
-        {
-            stat.execute("CREATE TABLE IF NOT EXISTS PROBLEM (REPO VARCHAR(10), KEY VARCHAR(10), CONTENTS BYTEA)"); 
-            stat.executeUpdate("INSERT INTO PROBLEM VALUES (repo, key, contents)");
+    public void write(byte[] contents, String repo, String key) throws IOException {
+        try {
+            try (Connection conn = db.getConnection();
+                 Statement stat = conn.createStatement()) {
+                stat.execute("CREATE TABLE IF NOT EXISTS PROBLEM (REPO VARCHAR(10), KEY VARCHAR(10), CONTENTS BYTEA)");
+                stat.executeUpdate("INSERT INTO PROBLEM VALUES (repo, key, contents)");
 
+            }
         } catch (SQLException ex) {
             String bytes = Arrays.toString(contents);
-            logger.error("ProblemSQLConnection.write : Cannot put " + bytes.substring(0, Math.min(50, bytes.length())) + "... to " + repo);
-            throw ex;                   
+            String message = "ProblemSQLConnection.write : Cannot put " + bytes.substring(0, Math.min(50, bytes.length())) + "... to " + repo;
+            logger.error(message);
+            IOException ex2 = new IOException(message);
+            ex2.initCause(ex);
+            throw ex2;
         }
     }
 
     public void delete(String repo, String key) throws IOException {
         try {
             //unsure...
+            try (Connection conn = db.getConnection()) {
+                PreparedStatement ps = conn.prepareStatement("DELETE FROM PROBLEM WHERE REPO = ? AND KEY = ?");
+                ps.setString(1, repo);
+                ps.setString(2, key);ps.executeUpdate();
 
-
-
+            }
         } catch (SQLException ex) {
-            logger.error("ProblemSQLConnection.delete : Cannot delete " + repo);
-            throw ex;
+            String message = "ProblemSQLConnection.delete : Cannot delete " + repo;
+            logger.error(message);
+            IOException ex2 = new IOException(message);
+            ex2.initCause(ex);
+            throw ex2;
         }
     }
 
     public byte[] read(String repo, String key) throws IOException {
         byte[] result = null;
 
-        try (Connection conn = getConnection();
-                Statement stat = conn.createStatement()
-                ResultSet result = stat.executeQuery("SELECT * FROM PROBLEM"))
+        try (Connection conn = db.getConnection();
+                Statement stat = conn.createStatement();
+                ResultSet rs = stat.executeQuery("SELECT * FROM PROBLEM"))
         {
-            if (result.next())
+            if (rs.next())
             {
-                System.out.println(result.getString(1)); 
-                System.out.println(result.getString(2));
+                System.out.println(rs.getString(1));
+                System.out.println(rs.getString(2));
             }
-            stat.executeUpdate("DROP TABLE PROBLEM");
-
         } catch (SQLException ex) {
-            logger.error("ProblemSQLConnection.read : Cannot read " + key + " from " + repo);
-            throw ex;                
+            String message = "ProblemSQLConnection.read : Cannot read " + key + " from " + repo;
+            logger.error(message);
+            IOException ex2 = new IOException(message);
+            ex2.initCause(ex);
+            throw ex2;
         }
         return result; 
     }
