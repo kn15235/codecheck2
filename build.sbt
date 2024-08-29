@@ -66,3 +66,7 @@ dockerCommands := {
 libraryDependencies ++= Seq(
    "org.postgresql" % "postgresql" % "42.7.3"
 )
+
+libraryDependencies ++= Seq(
+javaJdbc
+)

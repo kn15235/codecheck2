@@ -46,7 +46,7 @@ public class practiceTest
                     System.out.println(result.getString(1));
                     System.out.println(result.getString(2));
                     //get blob & get byte and to print out?
-                    System.out.println(result.getBytes(3));
+                    System.out.println(Arrays.toString(result.getBytes(3)));
 
                 }
             }

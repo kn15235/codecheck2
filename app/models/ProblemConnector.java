@@ -28,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.inject.Inject;
 import play.db.*;
+import java.sql.Connection;
+import play.db.Database;
 
 // TODO Use DI configuration to avoid this delegation
 
@@ -230,7 +232,8 @@ class ProblemSQLConnection implements ProblemConnection {
             try (Connection conn = db.getConnection()) {
                 PreparedStatement ps = conn.prepareStatement("DELETE FROM PROBLEM WHERE REPO = ? AND KEY = ?");
                 ps.setString(1, repo);
-                ps.setString(2, key);ps.executeUpdate();
+                ps.setString(2, key);
+                ps.executeUpdate();
 
             }
         } catch (SQLException ex) {
@@ -243,7 +246,6 @@ class ProblemSQLConnection implements ProblemConnection {
     }
 
     public byte[] read(String repo, String key) throws IOException {
-        byte[] result = null;
 
         try (Connection conn = db.getConnection();
                 Statement stat = conn.createStatement();
@@ -261,10 +263,6 @@ class ProblemSQLConnection implements ProblemConnection {
             ex2.initCause(ex);
             throw ex2;
         }
-        return result; 
+        return rs; 
     }
 }
-
-
-
-
