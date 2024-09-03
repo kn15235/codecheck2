@@ -247,22 +247,24 @@ class ProblemSQLConnection implements ProblemConnection {
 
     public byte[] read(String repo, String key) throws IOException {
 
+        byte[] result = null; 
         try (Connection conn = db.getConnection();
                 Statement stat = conn.createStatement();
-                ResultSet rs = stat.executeQuery("SELECT * FROM PROBLEM"))
+                ResultSet rs = stat.executeQuery("SELECT * FROM PROBLEM");)
         {
             if (rs.next())
             {
                 System.out.println(rs.getString(1));
                 System.out.println(rs.getString(2));
             }
+
         } catch (SQLException ex) {
             String message = "ProblemSQLConnection.read : Cannot read " + key + " from " + repo;
             logger.error(message);
             IOException ex2 = new IOException(message);
             ex2.initCause(ex);
             throw ex2;
-        }
-        return rs; 
+        } 
+        return result; 
     }
 }
