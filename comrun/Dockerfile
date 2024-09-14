@@ -1,9 +1,7 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 RUN apt-get update && \
     apt-get install -y software-properties-common
-
-RUN add-apt-repository -y ppa:plt/racket
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     wget \
@@ -13,8 +11,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     sysstat \
     sudo \
     g++ \
-    haskell-platform \
-    openjdk-11-jdk-headless \
+    haskell-compiler \
+    openjdk-21-jdk-headless \
     libxi6 \
     libxtst6 \
     libxrender1 \
@@ -32,6 +30,12 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     rustc \
  && rm -rf /var/lib/apt/lists/*
 
+
+ENV KOTLIN_VERSION 2.0.20
+RUN wget -q "https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip" && \
+    unzip kotlin-compiler-${KOTLIN_VERSION}.zip -d / && mv /kotlinc /usr/lib/ && rm kotlin-compiler-${KOTLIN_VERSION}.zip
+ENV PATH="/usr/lib/kotlinc/bin:${PATH}"  
+	
 # https://stackoverflow.com/questions/28405902/how-to-set-the-locale-inside-a-debian-ubuntu-docker-container
 RUN locale-gen --no-purge en_US.UTF-8
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
