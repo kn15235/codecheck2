@@ -213,7 +213,19 @@ class ProblemSQLConnection implements ProblemConnection {
             try (Connection conn = db.getConnection();
                  Statement stat = conn.createStatement()) {
                 stat.execute("CREATE TABLE IF NOT EXISTS PROBLEM (REPO VARCHAR(10), KEY VARCHAR(10), CONTENTS BYTEA)");
-                stat.executeUpdate("INSERT INTO PROBLEM VALUES (repo, key, contents)");
+
+                //Attempts that I'ved tried: 
+
+                // stat.execute( "INSERT INTO PROBLEM (REPO, KEY) VALUES (repo , key)");
+
+                //stat.execute( "INSERT INTO PROBLEM(REPO, KEY, CONTENTS) VALUES (repo , key, content)"; 
+
+                // stat.execute("INSERT INTO PROBLEM VALUES(repo, key, contents)"); 
+
+                //string sqlString = "INSERT INTO PROBLEM VALUES" + "(" + repo ", " + key + ", " + contents + ")"; 
+                //stat.execute(sqlString);
+                
+                stat.execute("ALTER TABLE PROBLEM ADD COLUMN REPO VARCHAR(10)"); 
 
             }
         } catch (SQLException ex) {
@@ -228,7 +240,6 @@ class ProblemSQLConnection implements ProblemConnection {
 
     public void delete(String repo, String key) throws IOException {
         try {
-            //unsure...
             try (Connection conn = db.getConnection()) {
                 PreparedStatement ps = conn.prepareStatement("DELETE FROM PROBLEM WHERE REPO = ? AND KEY = ?");
                 ps.setString(1, repo);
